@@ -9,6 +9,9 @@ LEX = flex
 YACC = bison
 YFLAGS = --report=itemset --verbose -Wall -Werror
 GRAPHER = dot
+DOCKER ?= docker
+PYODIDE_IMAGE ?= beancount-pyodide
+PYODIDE_WHEEL_GLOB ?= dist/beancount-2.*-emscripten_3_1_46_wasm32.whl
 
 
 # Support PYTHON being the path to a python interpreter.
@@ -53,6 +56,20 @@ SOURCES =					\
 .PHONY: build
 build: $(SOURCES)
 	$(PYTHON) setup.py build_ext -i
+
+.PHONY: pyodide-image
+pyodide-image:
+	$(DOCKER) build -t $(PYODIDE_IMAGE) .
+
+.PHONY: pyodide-wheel
+pyodide-wheel: pyodide-image
+	$(DOCKER) run --rm -e FORCE_REDOWNLOAD_XBUILDENV=1 -v "$(PWD)":/work -w /work \
+		$(PYODIDE_IMAGE) ./tools/build_pyodide_wasm.sh
+
+.PHONY: pyodide-poc
+pyodide-poc: pyodide-wheel
+	mkdir -p pyodide-poc/wheels
+	cp -f $(PYODIDE_WHEEL_GLOB) pyodide-poc/wheels/
 
 $(CROOT)/tokens_test: $(CROOT)/tokens_test.o $(CROOT)/tokens.o $(CROOT)/decimal.o
 

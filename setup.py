@@ -8,6 +8,7 @@ __license__ = "GNU GPLv2"
 
 
 from os import path
+import os
 import platform
 import re
 import runpy
@@ -23,6 +24,26 @@ from setuptools import setup, find_packages, Extension
 # subtle bug. That's why I import this utility directly from path).
 hashsrc = runpy.run_path(path.join(path.dirname(__file__), "beancount/parser/hashsrc.py"))
 hash_parser_source_files = hashsrc["hash_parser_source_files"]
+
+
+# Pyodide cross builds sometimes need a forced wheel tag; keep this opt-in to
+# avoid affecting normal builds.
+cmdclass = {}
+if os.environ.get("PYODIDE_BUILD") == "1":
+    try:
+        import wheel.bdist_wheel as _wheel_bdist
+
+        class bdist_wheel(_wheel_bdist.bdist_wheel):
+            def get_tag(self):
+                override = os.environ.get("PYODIDE_WHEEL_TAG")
+                if override:
+                    impl, abi, plat = override.split("-", 2)
+                    return impl, abi, plat
+                return super().get_tag()
+
+        cmdclass["bdist_wheel"] = bdist_wheel
+    except Exception:
+        cmdclass = {}
 
 
 def get_cflags():
@@ -135,6 +156,7 @@ setup(
             extra_compile_args=get_cflags(),
         ),
     ],
+    cmdclass=cmdclass,
     install_requires=[
         # We use dateutil for timezone database definitions. See this
         # article for context: https://assert.cc/posts/dateutil-preferred/
