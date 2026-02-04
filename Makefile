@@ -6,6 +6,9 @@ TOOLS=./tools
 
 PYTHON ?= uv run python
 GRAPHER = dot
+DOCKER ?= docker
+PYODIDE_IMAGE ?= beancount-pyodide
+PYODIDE_WHEEL_GLOB ?= dist/beancount-*-emscripten_3_1_46_wasm32.whl
 
 PYMODEXT = $(shell $(PYTHON) -c 'import importlib.machinery; print(importlib.machinery.EXTENSION_SUFFIXES[0])')
 
@@ -20,6 +23,20 @@ build:
 	meson setup --reconfigure -Dtests=enabled build/
 	ninja -C build/
 	cp build/_parser$(PYMODEXT) beancount/parser/
+
+.PHONY: pyodide-image
+pyodide-image:
+	$(DOCKER) build -t $(PYODIDE_IMAGE) .
+
+.PHONY: pyodide-wheel
+pyodide-wheel: pyodide-image
+	$(DOCKER) run --rm -e FORCE_REDOWNLOAD_XBUILDENV=1 -v "$(PWD)":/work -w /work \
+		$(PYODIDE_IMAGE) ./tools/build_pyodide_wasm.sh
+
+.PHONY: pyodide-poc
+pyodide-poc: pyodide-wheel
+	mkdir -p pyodide-poc/wheels
+	cp -f $(PYODIDE_WHEEL_GLOB) pyodide-poc/wheels/
 
 .PHONY: ctest
 ctest:
