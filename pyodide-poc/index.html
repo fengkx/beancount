@@ -7,59 +7,170 @@
     <style>
       :root {
         color-scheme: light;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+          "Courier New", monospace;
       }
-      body {
-        margin: 24px;
-        max-width: 920px;
-      }
-      h1 {
-        font-size: 20px;
-        margin: 0 0 12px 0;
-      }
-      #status {
-        padding: 8px 10px;
-        border: 1px solid #ccc;
-        background: #f7f7f7;
-        margin-bottom: 12px;
-        white-space: pre-wrap;
-      }
-      textarea {
-        width: 100%;
-        height: 220px;
-        font-size: 13px;
-        padding: 8px;
+      * {
         box-sizing: border-box;
       }
-      button {
-        margin-top: 8px;
-        padding: 8px 12px;
-        font-size: 13px;
+      body {
+        margin: 0;
+        background: #f3f3f3;
+        color: #111;
       }
-      pre {
+      #app {
+        display: grid;
+        grid-template-rows: auto auto auto 1fr;
+        height: 100vh;
+      }
+      header {
+        padding: 16px 20px 4px 20px;
+      }
+      h1 {
+        font-size: 18px;
+        margin: 0;
+      }
+      #status {
+        margin: 0 20px 8px 20px;
+        padding: 8px 10px;
+        border: 1px solid #c7c7c7;
+        background: #fff;
+        white-space: pre-wrap;
+      }
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        align-items: center;
+        padding: 0 20px 12px 20px;
+      }
+      .controls label {
+        font-size: 12px;
+        color: #333;
+      }
+      select,
+      button {
+        font-family: inherit;
+        font-size: 12px;
+        padding: 6px 10px;
+      }
+      button {
+        border: 1px solid #444;
+        background: #111;
+        color: #fff;
+        cursor: pointer;
+      }
+      button.secondary {
+        background: #fff;
+        color: #111;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      #workspace {
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        gap: 12px;
+        padding: 0 20px 20px 20px;
+        min-height: 0;
+      }
+      aside {
+        background: #fff;
+        border: 1px solid #c7c7c7;
+        padding: 10px;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .files-title {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #666;
+      }
+      #file-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        overflow: auto;
+      }
+      #file-list button {
+        text-align: left;
+        width: 100%;
+        border: 1px solid #c7c7c7;
+        background: #f8f8f8;
+        color: #111;
+        padding: 6px 8px;
+      }
+      #file-list button.active {
+        border-color: #111;
+        background: #111;
+        color: #fff;
+      }
+      #main {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-height: 0;
+      }
+      #editor {
+        flex: 1;
+        min-height: 0;
+        border: 1px solid #c7c7c7;
+      }
+      #output {
         background: #111;
         color: #e6e6e6;
         padding: 12px;
+        margin: 0;
         overflow: auto;
-        max-height: 320px;
+        height: 180px;
+      }
+      .hint {
+        font-size: 11px;
+        color: #555;
+        margin-left: auto;
+      }
+      @media (max-width: 900px) {
+        #workspace {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto 1fr;
+        }
       }
     </style>
   </head>
   <body>
-    <h1>Pyodide Beancount POC</h1>
-    <div id="status">Idle</div>
-    <textarea id="input">2024-01-01 open Assets:Cash USD
-2024-01-01 open Equity:Opening-Balances USD
-
-2024-01-02 * "Init"
-  Assets:Cash  10 USD
-  Equity:Opening-Balances
-</textarea>
-    <div>
-      <button id="run">Init and Run</button>
+    <div id="app">
+      <header>
+        <h1>Pyodide Beancount POC</h1>
+      </header>
+      <div id="status">Idle</div>
+      <div class="controls">
+        <label for="entry-file">Entry file</label>
+        <select id="entry-file"></select>
+        <button id="run">Init and Run</button>
+        <button class="secondary" id="add-file" type="button">Add file</button>
+        <button class="secondary" id="delete-file" type="button">Delete file</button>
+        <span class="hint">Includes are resolved relative to each file.</span>
+      </div>
+      <div id="workspace">
+        <aside>
+          <div class="files-title">Files</div>
+          <ul id="file-list"></ul>
+        </aside>
+        <section id="main">
+          <div id="editor"></div>
+          <pre id="output"></pre>
+        </section>
+      </div>
     </div>
-    <pre id="output"></pre>
 
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
     <script type="module" src="./main.js"></script>
   </body>
 </html>
