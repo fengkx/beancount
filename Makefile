@@ -11,7 +11,7 @@ YFLAGS = --report=itemset --verbose -Wall -Werror
 GRAPHER = dot
 DOCKER ?= docker
 PYODIDE_IMAGE ?= beancount-pyodide
-PYODIDE_WHEEL_GLOB ?= dist/beancount-2.*-emscripten_3_1_46_wasm32.whl
+PYODIDE_WHEEL_GLOB ?= dist/beancount-2.*-emscripten_4_0_9_wasm32.whl
 
 
 # Support PYTHON being the path to a python interpreter.
