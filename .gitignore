@@ -11,6 +11,7 @@
 .pytest_cache/*
 .pyodide-emsdk/
 .pyodide-xbuildenv/
+.pyodide-xbuildenv-*/
 TAGS
 bazel-*
 beancount.egg-info
