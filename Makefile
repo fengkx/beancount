@@ -8,7 +8,7 @@ PYTHON ?= uv run python
 GRAPHER = dot
 DOCKER ?= docker
 PYODIDE_IMAGE ?= beancount-pyodide
-PYODIDE_WHEEL_GLOB ?= dist/beancount-*-emscripten_3_1_46_wasm32.whl
+PYODIDE_WHEEL_GLOB ?= dist/beancount-*-emscripten_4_0_9_wasm32.whl
 
 PYMODEXT = $(shell $(PYTHON) -c 'import importlib.machinery; print(importlib.machinery.EXTENSION_SUFFIXES[0])')
 

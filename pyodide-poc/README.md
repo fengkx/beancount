@@ -20,7 +20,7 @@ Then open `http://localhost:8080` in your browser.
 - First load is large and slow because Pyodide and packages are fetched.
 - `beancount` is not a pure-Python wheel, so Pyodide install may fail unless you provide a Pyodide-compatible wheel.
 - `CUSTOM_WHEELS` in `pyodide-poc/main.js` is preconfigured to load the local
-  `pyodide-poc/wheels/beancount-3.2.0-cp311-cp311-emscripten_3_1_46_wasm32.whl`.
+  `pyodide-poc/wheels/beancount-3.2.0-cp313-cp313-emscripten_4_0_9_wasm32.whl`.
 - The entry file is selected in the UI. `include` directives resolve relative to
   each file because the POC syncs every editor file into `/work` in the
   Pyodide filesystem and calls `loader.load_file()` on the entry file.
