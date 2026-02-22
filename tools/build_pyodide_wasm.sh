@@ -13,6 +13,9 @@ fi
 PYODIDE_VERSION="0.29.3"
 PYODIDE_BUILD_VERSION="$(python -c 'import pyodide_build; print(pyodide_build.__version__)')"
 XBUILDENV_BASE=".pyodide-xbuildenv-${PYODIDE_BUILD_VERSION}"
+XBUILDENV_INSTALL_RETRIES="${XBUILDENV_INSTALL_RETRIES:-5}"
+XBUILDENV_RETRY_DELAY_SEC="${XBUILDENV_RETRY_DELAY_SEC:-5}"
+XBUILDENV_URL="${PYODIDE_XBUILDENV_URL:-https://github.com/pyodide/pyodide/releases/download/${PYODIDE_VERSION}/xbuildenv-${PYODIDE_VERSION}.tar.bz2}"
 
 if [[ "${FORCE_REDOWNLOAD_XBUILDENV:-}" == "1" ]]; then
   rm -rf "${XBUILDENV_BASE}"
@@ -23,7 +26,34 @@ mkdir -p dist
 rm -f dist/beancount-*wasm32*.whl
 
 # Ensure the xbuild environment exists before Meson config.
-pyodide xbuildenv install "${PYODIDE_VERSION}" --path "${XBUILDENV_BASE}" --force
+install_xbuildenv_with_retry() {
+  local attempt
+  local delay="${XBUILDENV_RETRY_DELAY_SEC}"
+
+  for ((attempt = 1; attempt <= XBUILDENV_INSTALL_RETRIES; attempt++)); do
+    echo "Installing Pyodide xbuildenv (attempt ${attempt}/${XBUILDENV_INSTALL_RETRIES})"
+
+    if pyodide xbuildenv install "${PYODIDE_VERSION}" --path "${XBUILDENV_BASE}" --force; then
+      return 0
+    fi
+
+    echo "xbuildenv install by version failed, retrying with explicit URL: ${XBUILDENV_URL}"
+    if pyodide xbuildenv install --url "${XBUILDENV_URL}" --path "${XBUILDENV_BASE}" --force; then
+      return 0
+    fi
+
+    if (( attempt < XBUILDENV_INSTALL_RETRIES )); then
+      echo "xbuildenv install failed, sleeping ${delay}s before retry"
+      sleep "${delay}"
+      delay=$((delay * 2))
+    fi
+  done
+
+  echo "Failed to install Pyodide xbuildenv after ${XBUILDENV_INSTALL_RETRIES} attempts." >&2
+  return 1
+}
+
+install_xbuildenv_with_retry
 XBUILDENV_ROOT="${XBUILDENV_BASE}/xbuildenv/xbuildenv"
 
 PY_INSTALL_DIR="$(ls -1 ${XBUILDENV_ROOT}/pyodide-root/cpython/installs | head -1)"
