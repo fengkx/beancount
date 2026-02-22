@@ -2,6 +2,12 @@
 set -euo pipefail
 
 ROOT_DIR="$(pwd)"
+BEANCOUNT_WASM_PROFILE="${BEANCOUNT_WASM_PROFILE:-release}"
+
+if [[ "${BEANCOUNT_WASM_PROFILE}" != "release" && "${BEANCOUNT_WASM_PROFILE}" != "debug-symbols" ]]; then
+  echo "Invalid BEANCOUNT_WASM_PROFILE=${BEANCOUNT_WASM_PROFILE} (expected release|debug-symbols)" >&2
+  exit 1
+fi
 
 # Optional: force a clean xbuildenv (useful in Docker when host has a different platform).
 PYODIDE_VERSION="0.29.3"
@@ -183,6 +189,16 @@ export PKG_CONFIG_PATH="${PY_PKGCONFIG_DIR_ABS}"
 export PYODIDE_BUILD=1
 CP_TAG="cp${PY_MAJOR_MINOR//./}"
 export PYODIDE_WHEEL_TAG="${CP_TAG}-${CP_TAG}-emscripten_${EMSCRIPTEN_VERSION//./_}_wasm32"
+
+if [[ "${BEANCOUNT_WASM_PROFILE}" == "debug-symbols" ]]; then
+  # Keep symbol info and function names so Chrome Performance can map wasm frames.
+  export CFLAGS="${CFLAGS:-} -g2 --profiling-funcs"
+  export CXXFLAGS="${CXXFLAGS:-} -g2 --profiling-funcs"
+  export LDFLAGS="${LDFLAGS:-} -gsource-map --profiling-funcs"
+  echo "Building with debug symbols enabled (BEANCOUNT_WASM_PROFILE=debug-symbols)"
+else
+  echo "Building in release profile (BEANCOUNT_WASM_PROFILE=release)"
+fi
 
 pyodide build . -o dist
 
